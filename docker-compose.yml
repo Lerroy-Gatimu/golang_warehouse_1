@@ -1,0 +1,117 @@
+volumes:
+  postgres_data:
+  airflow_logs:
+  airflow_db:
+
+networks:
+  warehouse_net:
+    driver: bridge
+
+services:
+
+  # Warehouse PostgreSQL 
+  postgres:
+    image: postgres:16-alpine
+    container_name: warehouse_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - warehouse_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Airflow internal PostgreSQL 
+  airflow_postgres:
+    image: postgres:16-alpine
+    container_name: airflow_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${AIRFLOW_DB_USER}
+      POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD}
+      POSTGRES_DB: ${AIRFLOW_DB_NAME}
+    volumes:
+      - airflow_db:/var/lib/postgresql/data
+    networks:
+      - warehouse_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AIRFLOW_DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Airflow init (runs once) 
+  airflow-init:
+    image: apache/airflow:2.9.1
+    container_name: airflow_init
+    depends_on:
+      airflow_postgres:
+        condition: service_healthy
+    env_file:
+      - .env                       
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@airflow_postgres/${AIRFLOW_DB_NAME}
+    networks:
+      - warehouse_net
+    entrypoint: >
+      bash -c "
+        airflow db migrate &&
+        airflow users create
+          --username ${AIRFLOW_ADMIN_USERNAME}
+          --password ${AIRFLOW_ADMIN_PASSWORD}
+          --firstname Admin
+          --lastname User
+          --role Admin
+          --email ${AIRFLOW_ADMIN_EMAIL} || true
+      "
+    restart: "no"
+
+  # Airflow webserver 
+  airflow-webserver:
+    image: apache/airflow:2.9.1
+    container_name: airflow_webserver
+    restart: unless-stopped
+    depends_on:
+      airflow_postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@airflow_postgres/${AIRFLOW_DB_NAME}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+    networks:
+      - warehouse_net
+    command: webserver
+
+  # Airflow scheduler 
+  airflow-scheduler:
+    image: apache/airflow:2.9.1
+    container_name: airflow_scheduler
+    restart: unless-stopped
+    depends_on:
+      airflow_postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@airflow_postgres/${AIRFLOW_DB_NAME}
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+    networks:
+      - warehouse_net
+    command: scheduler

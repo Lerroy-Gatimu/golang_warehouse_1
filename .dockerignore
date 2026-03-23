@@ -1,0 +1,32 @@
+.env
+*.env
+
+# Go build artifacts
+bin/
+*.exe
+
+# Git files
+.git/
+.gitignore
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+*_test.go
+coverage.out
+
+# Logs
+*.log
+logs/
+
+# Airflow internal files (managed by Docker volumes, not the image)
+airflow/logs/
+airflow/plugins/

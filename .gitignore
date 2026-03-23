@@ -1,0 +1,6 @@
+.env
+*.sum
+.env
+*.env
+.env.*
+!.env.example
