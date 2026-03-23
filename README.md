@@ -287,29 +287,6 @@ The DAG runs automatically every day at **6:00 AM** (cron: `0 6 * * *`).
 | total_precip_mm | DECIMAL(6,2) | Total rainfall |
 | avg_windspeed | DECIMAL(6,2) | Average wind speed |
 
----
-
-## Key Concepts Explained
-
-### What is ETL?
-ETL stands for **Extract, Transform, Load** — the three phases of moving data from a source to a destination:
-- **Extract**: Pull data from an API or database
-- **Transform**: Clean, validate, and reshape it
-- **Load**: Write the clean data to your warehouse
-
-### What is a Data Warehouse?
-A data warehouse is a database optimized for analysis rather than live transactions. It stores historical data in layers (raw → clean → aggregated) so analysts can run queries efficiently.
-
-### What is Airflow?
-Apache Airflow is a platform for defining, scheduling, and monitoring data workflows. You write pipelines as Python code (DAGs), and Airflow handles running them on schedule, retrying failures, and showing you what happened.
-
-### What is a Connection Pool?
-Instead of opening and closing a new database connection for every query (slow), a connection pool keeps several connections open and reuses them. The `pgxpool` library handles this automatically.
-
-### What is an Upsert?
-An upsert is `INSERT ... ON CONFLICT DO UPDATE/NOTHING`. It inserts a new row if it doesn't exist, or updates/skips it if it does. This makes pipelines **idempotent** — you can re-run them safely without creating duplicate data.
-
----
 
 ## Querying Your Warehouse
 
