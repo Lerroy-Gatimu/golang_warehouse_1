@@ -183,7 +183,7 @@ docker compose ps
 ### 7. Verify the Database
 
 ```bash
-docker exec -it warehouse_postgres psql -U warehouse_user -d golang_warehouse -c "\dt"
+docker exec -it warehouse_postgres psql -U postgres -d golang_warehouse -c "\dt"
 ```
 
 You should see the three warehouse tables listed.
@@ -315,7 +315,7 @@ An upsert is `INSERT ... ON CONFLICT DO UPDATE/NOTHING`. It inserts a new row if
 
 Connect to the database:
 ```bash
-docker exec -it warehouse_postgres psql -U warehouse_user -d golang_warehouse
+docker exec -it warehouse_postgres psql -U postgres -d golang_warehouse
 ```
 
 ### Useful Queries
@@ -345,46 +345,6 @@ ORDER BY total_precip_mm DESC;
 
 ---
 
-## Troubleshooting
 
-### "Cannot connect to PostgreSQL"
-- Ensure Docker is running: `docker compose ps`
-- Check Postgres logs: `docker compose logs postgres`
-- Wait 20 seconds after `docker compose up` before running Go code
 
-### "go: module not found"
-- Run `go mod tidy` to resolve dependencies
-- Ensure your module path in `go.mod` matches the imports in your `.go` files
 
-### Airflow UI not loading
-- Wait 60–90 seconds after `docker compose up` — Airflow takes time to initialize
-- Check logs: `docker compose logs airflow-webserver`
-
-### No rows inserted
-- Check that the `.env` file exists and has correct values
-- Run `go run ./cmd/etl/` manually and read the log output
-- Verify tables exist: `docker exec -it warehouse_postgres psql -U warehouse_user -d golang_warehouse -c "\dt"`
-
----
-
-## Stopping the Project
-
-```bash
-# Stop all containers (keep data)
-docker compose down
-
-# Stop and delete all data
-docker compose down -v
-```
-
----
-
-## Next Steps
-
-Once comfortable with this project, explore:
-
-- **dbt** — SQL-based transformations on top of your warehouse
-- **Apache Kafka** — real-time streaming instead of batch loads
-- **Metabase** — connect to your Postgres warehouse for visual dashboards
-- **BigQuery / Snowflake** — cloud-hosted warehouses for production scale
-- **Go concurrency** — use goroutines to process all cities in parallel
