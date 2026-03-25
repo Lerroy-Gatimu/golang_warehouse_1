@@ -3,24 +3,6 @@
 A production-style **data warehouse pipeline** built with Go, PostgreSQL, and Apache Airflow.  
 Ingests real hourly weather data from the [Open-Meteo API](https://open-meteo.com/), applies a three-layer warehouse architecture, and automates daily runs via Airflow.
 
----
-
-## Table of Contents
-
-1. [Project Overview](#project-overview)
-2. [Tech Stack](#tech-stack)
-3. [Architecture](#architecture)
-4. [Project Structure](#project-structure)
-5. [Prerequisites](#prerequisites)
-6. [Setup & Installation](#setup--installation)
-7. [Running the Pipeline](#running-the-pipeline)
-8. [Airflow Orchestration](#airflow-orchestration)
-9. [Database Schema](#database-schema)
-10. [Key Concepts Explained](#key-concepts-explained)
-11. [Querying Your Warehouse](#querying-your-warehouse)
-12. [Troubleshooting](#troubleshooting)
-
----
 
 ## Project Overview
 
@@ -45,34 +27,6 @@ Ingests real hourly weather data from the [Open-Meteo API](https://open-meteo.co
 
 ---
 
-## Architecture
-
-```
-Open-Meteo API
-      │
-      ▼
-┌─────────────┐
-│  EXTRACTOR  │  Go: fetches JSON from API
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ TRANSFORMER │  Go: cleans data, builds daily summaries
-└──────┬──────┘
-       │
-       ▼
-┌────────────────────────────────┐
-│         PostgreSQL             │
-│  raw_weather        (raw)      │
-│  stg_weather_hourly (staging)  │
-│  wh_weather_daily_summary (wh) │
-└────────────────────────────────┘
-       ▲
-       │ orchestrates
-┌─────────────┐
-│   Airflow   │  Schedules daily runs, monitors health
-└─────────────┘
-```
 
 ### Three-Layer Warehouse Pattern
 
@@ -108,85 +62,6 @@ golang_warehouse_1/
 ├── go.mod                          ← Go module definition
 └── README.md                       ← This file
 ```
-
----
-
-## Prerequisites
-
-Install the following before proceeding:
-
-| Tool | Version | Install |
-|---|---|---|
-| Go | 1.22+ | https://go.dev/dl/ |
-| Docker Desktop | Latest | https://www.docker.com/products/docker-desktop/ |
-| Git | Any | https://git-scm.com/ |
-
-Verify installs:
-```bash
-go version
-docker --version
-docker compose version
-```
-
----
-
-## Setup & Installation
-
-### 1. Clone / Create the Project
-
-```bash
-mkdir golang_warehouse_1
-cd golang_warehouse_1
-go mod init github.com/yourusername/golang_warehouse_1
-```
-
-### 2. Create All Directories
-
-```bash
-mkdir -p cmd/etl internal/extractor internal/transformer internal/loader db/migrations dags
-```
-
-### 3. Install Go Dependencies
-
-```bash
-go get github.com/jackc/pgx/v5
-go get github.com/joho/godotenv
-```
-
-### 4. Create the `.env` File
-
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=warehouse_user
-DB_PASSWORD=warehouse_pass
-DB_NAME=golang_warehouse
-```
-
-### 5. Copy All Source Files
-
-Copy the files provided in the setup guide into their respective paths (see Project Structure above).
-
-### 6. Start Infrastructure
-
-```bash
-docker compose up -d
-```
-
-This starts PostgreSQL and Airflow in the background. The first run takes a few minutes to download images.
-
-Check containers are running:
-```bash
-docker compose ps
-```
-
-### 7. Verify the Database
-
-```bash
-docker exec -it warehouse_postgres psql -U postgres -d golang_warehouse -c "\dt"
-```
-
-You should see the three warehouse tables listed.
 
 ---
 

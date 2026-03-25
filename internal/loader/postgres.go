@@ -35,19 +35,17 @@ func (db *DB) Close() {
     db.pool.Close()
 }
 
-// SaveRaw stores the original API JSON response in the raw layer.
-// We always save raw data first — it's our audit trail.
+
 func (db *DB) SaveRaw(ctx context.Context, location string, lat, lon float64, rawJSON []byte) error {
     _, err := db.pool.Exec(ctx, `
         INSERT INTO raw_weather (location, latitude, longitude, raw_json)
         VALUES ($1, $2, $3, $4)
     `, location, lat, lon, rawJSON)
-    // Note: $1, $2, $3, $4 are parameterized placeholders — this prevents SQL injection
+    
     return err
 }
 
-// SaveHourly bulk-inserts hourly records into the staging table.
-// Uses a batch insert for performance — one round-trip to DB for all rows.
+
 func (db *DB) SaveHourly(ctx context.Context, records []transformer.HourlyRecord) (int, error) {
     if len(records) == 0 {
         return 0, nil

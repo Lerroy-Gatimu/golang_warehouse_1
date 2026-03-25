@@ -29,7 +29,7 @@ func main() {
     dbUser, dbPass, dbHost, dbPort, dbName,
 )
 
-    // Create a context — contexts control timeouts and cancellation in Go
+    // Create a context — contexts control timeouts and cancellation 
     ctx := context.Background()
 
     db, err := loader.New(ctx, connStr)
@@ -98,7 +98,7 @@ func main() {
     log.Printf("Pipeline complete | %d hourly rows | %d daily summaries", totalHourly, totalSummaries)
 }
 
-// getEnv reads an environment variable, returning a fallback value if not set
+
 func getEnv(key, fallback string) string {
     if val := os.Getenv(key); val != "" {
         return val
